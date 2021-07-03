@@ -105,7 +105,7 @@ public class MainMenuController implements Initializable {
     /**
      * Creates an announcement after logging in to greet the user and inform of upcoming meetings
      */
-    public void announcement() {
+    static public void announcement() {
         Appointment appt = Requests.getUpcomingAppts();
         if (appt.getStartDateTime().isBefore(LocalDateTime.now().plusMinutes(15)) && appt.getStartDateTime().isAfter(LocalDateTime.now())) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -131,7 +131,6 @@ public class MainMenuController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        announcement();
 
     }
 }

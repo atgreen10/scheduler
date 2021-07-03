@@ -14,8 +14,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import model.Appointment;
 import model.Contact;
+import model.Customer;
 import utils.Requests;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -184,13 +186,13 @@ public class AppointmentController {
 //        stage.setScene(new Scene(scene));
 //        stage.show();
 
-
+/** Deletes the selected Appointment from the table. */
     @FXML
     void deleteApptBtnHandler(MouseEvent event) {
         Appointment selectedAppointment = apptTableView.getSelectionModel().getSelectedItem();
         apptTableView.getItems().remove(selectedAppointment);
         Requests.removeAppt(selectedAppointment);
-
+        apptTableView.refresh();
     }
 
     /**
@@ -541,6 +543,9 @@ public class AppointmentController {
             alert.setContentText("Appointment is not within business hours");
             alert.showAndWait();
         }
+        if (newAppointment != null) {
+            Requests.createNewAppt(newAppointment);
+        }
     }
 
     /**
@@ -635,6 +640,7 @@ public class AppointmentController {
         userIDText.clear();
     }
 
+    /** checks the appointment time against database for any overlap. This determines whether the appointment can be booked or now. */
     public boolean checkForOverlap(Appointment appointment) {
         ObservableList<Appointment> apptList = Requests.getAppointments();
         overlaps = false;
@@ -658,6 +664,7 @@ public class AppointmentController {
 //        return overlaps;
 //    }
 
+    /** Clears the time fields on the Appointment page when an overlap is detected. */
     public void clearTime(){ ;
         startHourComboBox.setValue(null);
         startMinuteComboBox.setValue(null);

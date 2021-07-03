@@ -10,6 +10,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import static java.sql.Timestamp.valueOf;
 import static javafx.collections.FXCollections.observableArrayList;
@@ -154,6 +155,30 @@ public class Requests {
             DBConnection.closeAll(ps, result, conn);
         }
         return states;
+    }
+
+    public static ObservableList<Integer> getCustomerIDs() {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        ObservableList <Integer> customerIDs = null;
+        try {
+            conn = DBConnection.startConnection();
+            customerIDs = observableArrayList();
+            String selectUsers = "SELECT Customer_ID FROM appointments";
+            DBQuery.setPreparedStatement(conn, selectUsers);
+            statement = DBQuery.getPreparedStatement();
+            statement.executeQuery();
+            rs = statement.getResultSet();
+            while (rs.next()) {
+                customerIDs.add(rs.getInt("Customer_ID"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(statement, rs, conn);
+        }
+        return customerIDs;
     }
 
     public static ObservableList<Country> getCountry() {
@@ -394,6 +419,7 @@ public class Requests {
             DBQuery.setPreparedStatement(conn, selectUpcoming);
             statement = DBQuery.getPreparedStatement();
             statement.setInt(1, LoginController.activeUser.getUserID());
+            System.out.println("User ID found in getUpcomingAppts(): " + LoginController.activeUser.getUserID());
             rs = statement.executeQuery();
             while (rs.next()) {
                 appt = new Appointment();
@@ -430,11 +456,11 @@ public class Requests {
         Appointment appt = null;
         try{
             conn = DBConnection.startConnection();
-            String deleteAppt = "DELETE FROM appointment WHERE user_ID = ?";
+            String deleteAppt = "DELETE FROM appointments WHERE user_ID = ?";
             DBQuery.setPreparedStatement(conn, deleteAppt);
             statement = DBQuery.getPreparedStatement();
             statement.setInt(1, appointment.getUserID());
-            rs = statement.executeQuery();
+            statement.execute();
         }
         catch(SQLException e) {
             e.printStackTrace();
@@ -442,8 +468,25 @@ public class Requests {
         finally{
             DBConnection.closeAll(statement, rs, conn);
         }
-
     }
 
+    public static void removeCust(Customer customer) throws SQLException {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        Customer cust = null;
+        try {
+            conn = DBConnection.startConnection();
+            String deleteAppt = "DELETE FROM customers WHERE customer_ID = ?";
+            DBQuery.setPreparedStatement(conn, deleteAppt);
+            statement = DBQuery.getPreparedStatement();
+            statement.setInt(1, customer.getCustomer_ID());
+            statement.execute();
+        } catch (SQLException e){
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(statement, null, conn);
+        }
+
+    }
 }
 

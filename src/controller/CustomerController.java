@@ -24,6 +24,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static javafx.collections.FXCollections.observableArrayList;
 
@@ -33,7 +34,9 @@ public class CustomerController {
     Parent scene;
 
 
-    /** Connection to Database should actually be closed once the SQL query is completed, this is not good practice.*/
+    /**
+     * Connection to Database should actually be closed once the SQL query is completed, this is not good practice.
+     */
     private final ResultSet customerRS = new Requests().getCustomerData();
 
     Country selectedCountry;
@@ -48,6 +51,8 @@ public class CustomerController {
     Map<Integer, First_Level_Division> divisionIDtoStates = new HashMap<>();
     Map<First_Level_Division, Country> stateToCountry = new HashMap<>();
 
+    @FXML
+    private Button Delete;
 
     @FXML
     private final ResultSetMetaData metaData = customerRS.getMetaData();
@@ -245,12 +250,12 @@ public class CustomerController {
 
     /**
      * puts the data in observable list to be able to be displayed i
-
-     /**
+     * <p>
+     * /**
      * Sets up the combo box for listed countries
      */
     public void countryComboBox() {
-        ObservableList <Country> countries = FXCollections.observableArrayList();
+        ObservableList<Country> countries = FXCollections.observableArrayList();
         countries.addAll(countryStateMap.keySet());
         customerCountry.setItems(countries);
 
@@ -282,7 +287,7 @@ public class CustomerController {
         for (Country c : Requests.getCountry()) {
             ObservableList<First_Level_Division> states = Requests.getStates(c.getCountry_ID());
             countryStateMap.put(c, states);
-            for(First_Level_Division state : states){
+            for (First_Level_Division state : states) {
                 divisionIDtoStates.put(state.getDivision_ID(), state);
                 stateToCountry.put(state, c);
             }
@@ -369,7 +374,7 @@ public class CustomerController {
     /**
      * Creates a new customer object and assigns the information to its respective categories.
      */
-    public Customer createCustomer(){
+    public Customer createCustomer() {
         //       String customerCreatedBy = User.getUserName();
         isNewCustomer = true;
         Customer customer = new Customer();
@@ -434,13 +439,51 @@ public class CustomerController {
         customerCountry.setValue(null);
     }
 
+    @FXML
+    void deleteHandler(ActionEvent event) throws SQLException, IOException {
+        Customer selectedCustomer = customerTable.getSelectionModel().getSelectedItem();
+        ObservableList<Integer> appointments = Requests.getCustomerIDs();
+        for (int i = 0; i < appointments.size(); ++i) {
+            if (appointments.contains(selectedCustomer.getCustomer_ID())) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Customer error");
+                alert.setHeaderText("Customer/appointments error");
+                alert.setContentText("This customer still has appointments on the schedule. If you want to delete a customer, first you must delete all their appointments.");
+                alert.showAndWait();
+                return;
+            } else {
+                confirmDelete(selectedCustomer);
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(getClass().getResource("/view/MainMenu.fxml"));
+                loader.load();
 
-    public void initialize() {
-        createColumns();
-        setTableData();
-        populatesCountryAndState();
-        countryComboBox();
+                stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+                Parent scene = loader.getRoot();
+                stage.setScene(new Scene(scene));
+                stage.show();
+                return;
+
+            }
+        }
     }
 
+    public static void confirmDelete(Customer selectedCustomer) throws SQLException {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Customer");
+        alert.setHeaderText("Delete Customer");
+        alert.setContentText("Are you sure you want to delete this customer?");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            Requests.removeCust(selectedCustomer);
+        }
+    }
 
-}
+        public void initialize () {
+            createColumns();
+            setTableData();
+            populatesCountryAndState();
+            countryComboBox();
+        }
+
+
+    }

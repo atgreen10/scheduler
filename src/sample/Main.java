@@ -1,3 +1,13 @@
+/**@Title: C195 Scheduling App
+ * @author: Austin Green
+ * @Date: 06/28/2021
+ * @Contact: agre313@wgu.edu
+ * @Version: Java 11.0.9, JavaFX 11.0.2, MySQL 8.0.22
+ * @Purpose: This application keeps track of customer accounts and appointments with those customers as well as all information about the appointment
+ * such as time, location, type of appointment, who the appointment is with, etc.. The application is also able to generate a few different reports for
+ * the end user, including total customers by type and month, a schedule for each contact with appointment information, and my custom report on the data.
+ */
+
 package sample;
 
 import javafx.application.Application;
