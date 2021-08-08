@@ -19,7 +19,14 @@ public class Appointment {
     private LocalDateTime endDateTime;
     private Customer customer;
 
-    public Appointment() {
+    public Appointment(String apptID, String title, String type, String description, String start, String end, String customerID) {
+        this.appointmentID = Integer.parseInt(apptID);
+        this.title = title;
+        this.apptType = type;
+        this.description = description;
+        this.startDateTime = LocalDateTime.parse(start);
+        this.endDateTime = LocalDateTime.parse(end);
+        this.customerID = Integer.parseInt(customerID);
     }
 
     ;
@@ -37,6 +44,10 @@ public class Appointment {
         this.endDateTime = endDateTime;
         this.customerID = customerID;
         this.userID = userID;
+
+    }
+
+    public Appointment() {
 
     }
 

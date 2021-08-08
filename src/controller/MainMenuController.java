@@ -1,5 +1,6 @@
 package controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -27,6 +28,10 @@ import static controller.LoginController.activeUser;
 
 public class MainMenuController implements Initializable {
 
+    public static boolean isApptReport = false;
+    public static boolean isScheduleReport = false;
+    public static boolean isCustomReport = false;
+
 
     Stage stage;
     public static LocalTime businessOpening = LocalTime.of(8, 00, 00);
@@ -41,7 +46,13 @@ public class MainMenuController implements Initializable {
     private Button appointmentBtn;
 
     @FXML
-    private Button reportBtn;
+    private Button customerReportBtn;
+
+    @FXML
+    private Button customReportBtn;
+
+    @FXML
+    private Button scheduleReportBtn;
 
     @FXML
     private Button exitBtn;
@@ -87,27 +98,11 @@ public class MainMenuController implements Initializable {
     }
 
     /**
-     * Navigates the user to the reports page
-     */
-    @FXML
-    void reportBtnHandler(MouseEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("/view/Reports.fxml"));
-        loader.load();
-
-        stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        Parent scene = loader.getRoot();
-        stage.setScene(new Scene(scene));
-        stage.show();
-//
-    }
-
-    /**
      * Creates an announcement after logging in to greet the user and inform of upcoming meetings
      */
     static public void announcement() {
         Appointment appt = Requests.getUpcomingAppts();
-        if (appt.getStartDateTime().isBefore(LocalDateTime.now().plusMinutes(15)) && appt.getStartDateTime().isAfter(LocalDateTime.now())) {
+        if (appt != null && appt.getStartDateTime().isBefore(LocalDateTime.now().plusMinutes(15)) && appt.getStartDateTime().isAfter(LocalDateTime.now())) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Welcome");
             alert.setHeaderText("Welcome");
@@ -128,9 +123,66 @@ public class MainMenuController implements Initializable {
         }
     }
 
+    /** Navigates the user to the #Appt/contact report
+     *
+     * @param event indicates the button was clicked.
+     * @throws IOException indicates the scene was switched
+     */
+    @FXML
+    void customReportHandler(ActionEvent event) throws IOException {
+        isCustomReport = true;
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/view/report3.fxml"));
+        loader.load();
+
+        stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        Parent scene = loader.getRoot();
+        stage.setScene(new Scene(scene));
+        stage.show();
+
+    }
+
+    /** navigates user to the appointment/type report
+     *
+     * @param event indicates the button was clicked.
+     * @throws IOException needed when switching scenes
+     */
+    @FXML
+    void apptReportHandler(ActionEvent event) throws IOException {
+        if(isApptReport= true) {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/view/report1.fxml"));
+            loader.load();
+
+            stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+            Parent scene = loader.getRoot();
+            stage.setScene(new Scene(scene));
+            stage.show();
+        }
+
+    }
+
+    /** navigates user to the schedule report
+     *
+     * @param event indicates the button was clicked
+     * @throws IOException needed for switching scenes
+     */
+    @FXML
+    void scheduleReportHandler(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(getClass().getResource("/view/report2.fxml"));
+        loader.load();
+
+        stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        Parent scene = loader.getRoot();
+        stage.setScene(new Scene(scene));
+        stage.show();
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        announcement();
 
     }
+
 }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2021-08-07T20:09:38.222753300Z</date>
+  <millis>1628366978222</millis>
+  <nanos>753300</nanos>
+  <sequence>0</sequence>
+  <logger>controller.LoginController</logger>
+  <level>INFO</level>
+  <class>controller.LoginController</class>
+  <method>onClickLoginButton</method>
+  <thread>17</thread>
+  <message>Login attempted with user name: admin</message>
+</record>
+<record>
+  <date>2021-08-07T20:09:39.476724Z</date>
+  <millis>1628366979476</millis>
+  <nanos>724000</nanos>
+  <sequence>1</sequence>
+  <logger>controller.LoginController</logger>
+  <level>INFO</level>
+  <class>controller.LoginController</class>
+  <method>isLoginValid</method>
+  <thread>17</thread>
+  <message>admin successfully logged in at 2021-08-07T15:09:39.476724</message>
+</record>
+</log>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2021-08-07T22:19:38.543879900Z</date>
+  <millis>1628374778543</millis>
+  <nanos>879900</nanos>
+  <sequence>0</sequence>
+  <logger>controller.LoginController</logger>
+  <level>INFO</level>
+  <class>controller.LoginController</class>
+  <method>onClickLoginButton</method>
+  <thread>17</thread>
+  <message>Login attempted with user name: admin</message>
+</record>
+<record>
+  <date>2021-08-07T22:19:39.807876Z</date>
+  <millis>1628374779807</millis>
+  <nanos>876000</nanos>
+  <sequence>1</sequence>
+  <logger>controller.LoginController</logger>
+  <level>INFO</level>
+  <class>controller.LoginController</class>
+  <method>isLoginValid</method>
+  <thread>17</thread>
+  <message>admin successfully logged in at 2021-08-07T17:19:39.807876</message>
+</record>
+</log>

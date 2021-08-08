@@ -16,14 +16,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import utils.DBConnection;
-import utils.DBQuery;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 public class Main extends Application {
     /**
@@ -43,29 +37,13 @@ public class Main extends Application {
 
     public static void main(String[] args) {
 
-        Locale currentLocale = Locale.getDefault();
 
-//
-//        Locale france = new Locale("fr", "FR");
-//
-//        ResourceBundle rb = ResourceBundle.getBundle("sample/Nat_fr", Locale.getDefault());
-//        System.out.println("rb.getKeys(): ");
-//        for(Enumeration fr = rb.getKeys(); fr.hasMoreElements();)
-//            System.out.println(fr.nextElement());
 
-//        if (currentLocale.getLanguage().equals("fr")) {
-//            System.out.println("" + rb.getString("Username"));
-//            Enumeration<String> languageKeys = rb.getKeys();
-//            while (languageKeys.hasMoreElements()) {
-//                Set<String> keys = rb.keySet();
-//            }
-//        }
+//      Locale france = new Locale("fr");
+//      Locale.setDefault(france);
 
         /**Starts connection to database */
         conn = DBConnection.startConnection();
-
-        /**Gets statement reference */
-        Statement SQL = DBQuery.getStatement();
 
 
         launch(args);

@@ -1,16 +1,14 @@
 package utils;
 
-import controller.AppointmentController;
 import controller.LoginController;
+import controller.Report1Controller;
+import controller.Report2Controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.*;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
-import java.util.List;
 
 import static java.sql.Timestamp.valueOf;
 import static javafx.collections.FXCollections.observableArrayList;
@@ -19,6 +17,8 @@ public class Requests {
 
     /**
      * Queries database for User information stored in it.
+     * @param userName takes input from login screen for the user.
+     * @return user object from the database if the user input matches an entry in the database.
      */
     public static User getUser(String userName) {
         Connection conn = null;
@@ -47,6 +47,10 @@ public class Requests {
         return user;
     }
 
+    /** Retrieves all customer information from the customer table.
+     *
+     * @return all customer information from customer table.
+     */
     public static ObservableList<Customer> getCustomers() {
         Connection conn = null;
         PreparedStatement statement = null;
@@ -73,6 +77,9 @@ public class Requests {
         return allCustomers;
     }
 
+    /** Creates a new customer object in the table
+     * @param customer new customer object.
+     */
     public static void setNewCustomer(Customer customer) {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -100,6 +107,9 @@ public class Requests {
         System.out.println(customer);
     }
 
+    /** updates the selected customer info.
+     * @param customer the selected customer from the tableview.
+     */
     public static void updateCustomer(Customer customer) {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -125,11 +135,15 @@ public class Requests {
         }
     }
 
-
+    /** gets all customer infomation */
     public ResultSet getCustomerData() throws SQLException {
         return DBConnection.startConnection().createStatement().executeQuery("SELECT * FROM customers");
     }
 
+    /** gets the division and division_ID from the first level divisions to match a country ID.
+     * @param countryID indicates the country that will be used to pull which states will populate the result
+     * @return the list of states that have the country ID specified.
+     */
     public static ObservableList<First_Level_Division> getStates(int countryID) {
         ObservableList<First_Level_Division> states = null;
         Connection conn = null;
@@ -157,11 +171,14 @@ public class Requests {
         return states;
     }
 
+    /** Pulls customer ID information from the appointments table.
+     * @return customerID info.
+     */
     public static ObservableList<Integer> getCustomerIDs() {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
-        ObservableList <Integer> customerIDs = null;
+        ObservableList<Integer> customerIDs = null;
         try {
             conn = DBConnection.startConnection();
             customerIDs = observableArrayList();
@@ -181,6 +198,9 @@ public class Requests {
         return customerIDs;
     }
 
+    /** queries the database for all countries listed.
+     * @return list of all countries referenced.
+     */
     public static ObservableList<Country> getCountry() {
         ObservableList<Country> countryList = null;
         Connection conn = null;
@@ -207,6 +227,9 @@ public class Requests {
         return countryList;
     }
 
+    /** Pulls information from the contacts table
+     * @return all contacts from the table.
+     */
     public static ObservableList<Contact> contactComboBoxInfo() {
         ObservableList<Contact> contactInfo = null;
         Connection conn = null;
@@ -235,11 +258,15 @@ public class Requests {
         return contactInfo;
     }
 
+    /**retrieves appointment information from the appointment table.*/
     public static ResultSet getAppointmentList() throws SQLException {
         return DBConnection.startConnection().createStatement().executeQuery("SELECT Appointment_ID, Title, " +
                 "Description, Location, Type, Start, End, Customer_ID, User_ID, Contact_ID FROM appointments");
     }
 
+    /**retrieves all appointments and corresponding information from the appointments table
+     * @return all fields under the appointment object.
+     */
     public static ObservableList<Appointment> getAppointments() {
         Connection conn = null;
         PreparedStatement statement = null;
@@ -275,6 +302,9 @@ public class Requests {
         return appointmentList;
     }
 
+    /** Creates a new appointment object.
+     * @param appointment a new appointment object.
+     */
     public static void createNewAppt(Appointment appointment) {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -302,6 +332,7 @@ public class Requests {
 
     /**
      * Checks for changes to info that already exists for an Appointment object
+     * @param appointment is the selected Appointment from the tableview.
      */
     public static void updateAppointment(Appointment appointment) {
         Connection conn = null;
@@ -330,6 +361,9 @@ public class Requests {
         }
     }
 
+    /** Generates a list of future appointments for the next 7 days
+     * @return list of future appointments
+     */
     public static ObservableList<Appointment> getWeekView() {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -371,6 +405,9 @@ public class Requests {
         return weekViewAppointments;
     }
 
+    /** Generates a list of future appointments for the coming month
+     * @return list of future appointments.
+     */
     public static ObservableList<Appointment> getMonthView() {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -408,6 +445,9 @@ public class Requests {
         return monthViewAppointments;
     }
 
+    /** Uses userID to check for upcoming appointments in the next 15 minutes.
+     * @return appointment information for upcoming appointment.
+     */
     public static Appointment getUpcomingAppts() {
         Connection conn = null;
         PreparedStatement statement = null;
@@ -434,11 +474,6 @@ public class Requests {
                 appt.setUserID(rs.getInt("User_ID"));
                 appt.setContactID(rs.getInt("Contact_ID"));
 
-//                if ((appt.getStartDateTime().isBefore(LocalDateTime.now().plusMinutes(16))) && appt.getStartDateTime().isAfter(LocalDateTime.now())) {
-//                    upcomingAppts.add(appt);
-//                    System.out.println(upcomingAppts);
-//                    return appt;
-//                }
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -449,28 +484,32 @@ public class Requests {
     }
 
 
-    public static void removeAppt(Appointment appointment){
+    /** Removes the appointment from the table
+     * @param appointment the selected appointment from the tableview
+     */
+    public static void removeAppt(Appointment appointment) {
         Connection conn = null;
         PreparedStatement statement = null;
         ResultSet rs = null;
         Appointment appt = null;
-        try{
+        try {
             conn = DBConnection.startConnection();
-            String deleteAppt = "DELETE FROM appointments WHERE user_ID = ?";
+            String deleteAppt = "DELETE FROM appointments WHERE appointment_ID = ?";
             DBQuery.setPreparedStatement(conn, deleteAppt);
             statement = DBQuery.getPreparedStatement();
-            statement.setInt(1, appointment.getUserID());
+            statement.setInt(1, appointment.getAppointmentID());
             statement.execute();
-        }
-        catch(SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        }
-        finally{
+        } finally {
             DBConnection.closeAll(statement, rs, conn);
         }
     }
 
-    public static void removeCust(Customer customer) throws SQLException {
+    /** Removes the customer from the tableview.
+     * @param customer the selected customer from the tableview
+     */
+    public static void removeCust(Customer customer) {
         Connection conn = null;
         PreparedStatement statement = null;
         Customer cust = null;
@@ -481,12 +520,137 @@ public class Requests {
             statement = DBQuery.getPreparedStatement();
             statement.setInt(1, customer.getCustomer_ID());
             statement.execute();
-        } catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             DBConnection.closeAll(statement, null, conn);
         }
 
     }
+
+    /** Retrieves the number of appointments based on starting month and type of appointment.
+     * @return total number of appointments based on the criteria selected.
+     */
+    public static int getAppointmentReport() {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        ObservableList<Appointment> appointmentList = null;
+        String date = Report1Controller.getMonthSelection();
+        String type = Report1Controller.getType();
+        try {
+            conn = DBConnection.startConnection();
+            appointmentList = observableArrayList();
+            String appointmentRequest = "SELECT * FROM appointments WHERE monthname(Start) = ? && type = ?";
+            DBQuery.setPreparedStatement(conn, appointmentRequest);
+            statement = DBQuery.getPreparedStatement();
+            statement.setString(1, date);
+            statement.setString(2, type);
+            rs = statement.executeQuery();
+            while (rs.next()) {
+                Appointment appt = new Appointment();
+                appointmentList.add(appt);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(statement, rs, conn);
+        }
+        return appointmentList.size();
+    }
+
+
+    /** Gets the all types of appointments that are already recorded from the database.
+     * @return list of the types of appointments.
+     */
+    public static ObservableList<String> getTypes() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet result = null;
+        String type = null;
+        ObservableList<String> typeList = observableArrayList();
+        try {
+            conn = DBConnection.startConnection();
+            String request = "SELECT DISTINCT type FROM appointments";
+            DBQuery.setPreparedStatement(conn, request);
+            ps = DBQuery.getPreparedStatement();
+            result = ps.executeQuery();
+            while (result.next()) {
+                type = result.getString("Type");
+                typeList.add(type);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(ps, result, conn);
+        }
+        return typeList;
+    }
+
+    /** Retrieves a list of appointments for each contact.
+     * @param contact the contact selected for which the user would like the list of appointments for.
+     * @return the list of appointments for the selected contact.
+     */
+    public static ObservableList<Appointment> getAppointmentsByContact(String contact) {
+        Connection conn = null;
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+        ObservableList<Appointment> appointmentList = null;
+        try {
+            conn = DBConnection.startConnection();
+            appointmentList = observableArrayList();
+            String appointmentRequest = "SELECT appointments.Appointment_ID, appointments.Title, appointments.Type, appointments.Description, appointments.Start, appointments.End, appointments" +
+                    ".Customer_ID FROM appointments INNER JOIN contacts ON appointments.Contact_ID = contacts.Contact_ID WHERE contacts.Contact_Name = ?";
+            DBQuery.setPreparedStatement(conn, appointmentRequest);
+            statement = DBQuery.getPreparedStatement();
+            statement.setString(1, contact);
+            rs = statement.executeQuery();
+            while (rs.next()) {
+                Appointment appointment = new Appointment();
+                appointment.setAppointmentID(rs.getInt("Appointment_ID"));
+                appointment.setTitle(rs.getString("Title"));
+                appointment.setDescription(rs.getString("Description"));
+                appointment.setApptType(rs.getString("Type"));
+                appointment.setStartDateTime(rs.getTimestamp("Start").toLocalDateTime());
+                appointment.setEndDateTime(rs.getTimestamp("End").toLocalDateTime());
+                appointment.setCustomerID(rs.getInt("Customer_ID"));
+                appointmentList.add(appointment);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(statement, rs, conn);
+        }
+        System.out.println("this is the query result: " + appointmentList);
+        return appointmentList;
+    }
+
+    /** Retrieves the contacts name from database.
+     * @return contacts_name from contact table.
+     */
+    public static ObservableList<String> getContacts() {
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet result = null;
+        String contact = null;
+        ObservableList<String> contactList = observableArrayList();
+        try {
+            conn = DBConnection.startConnection();
+            String request = "SELECT contact_name FROM contacts";
+            DBQuery.setPreparedStatement(conn, request);
+            ps = DBQuery.getPreparedStatement();
+            result = ps.executeQuery();
+            while (result.next()) {
+                contact = result.getString("Contact_Name");
+                contactList.add(contact);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBConnection.closeAll(ps, result, conn);
+        }
+        return contactList;
+    }
+
 }
 

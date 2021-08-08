@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -17,6 +18,7 @@ import model.First_Level_Division;
 import utils.Requests;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -25,10 +27,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 import static javafx.collections.FXCollections.observableArrayList;
 
-public class CustomerController {
+public class CustomerController implements Initializable {
 
     Stage stage;
     Parent scene;
@@ -251,17 +254,17 @@ public class CustomerController {
     /**
      * puts the data in observable list to be able to be displayed i
      * <p>
-     * /**
-     * Sets up the combo box for listed countries
+     * lambda takes country objects and gets their country_ID for comparison and returns a specific integer
+     * based on whether it is more or less than the country being compared to in order to implement a way to
+     * order the values within the list because sets are unordered
+     * </p><p>
+     * Sets up the combo box for listed countries </p>
      */
     public void countryComboBox() {
         ObservableList<Country> countries = FXCollections.observableArrayList();
         countries.addAll(countryStateMap.keySet());
         customerCountry.setItems(countries);
 
-        /** lambda takes country objects and gets their country_ID for comparison and returns a specific integer
-         * based on whether it is more or less than the country being compared to in order to implement a way to
-         * order the values within the list because sets are unordered */
         countries.sort((o1, o2) -> {
             if (o1.getCountry_ID() == o2.getCountry_ID())
                 return 0;
@@ -283,6 +286,8 @@ public class CustomerController {
         return countryStateMap.get(selectedCountry);
     }
 
+    /** Maps the countries and states to eachother.
+     */
     public void populatesCountryAndState() {
         for (Country c : Requests.getCountry()) {
             ObservableList<First_Level_Division> states = Requests.getStates(c.getCountry_ID());
@@ -354,7 +359,7 @@ public class CustomerController {
      * Gets the customer phone text field info from the user and assigns it to a variable to be included in the Customer
      * object uploaded to the database.
      *
-     * @return
+     * @return phone number of customer as string
      */
     public String customerPhone() {
         String customerPhone = customerPhoneText.getText();
@@ -409,6 +414,7 @@ public class CustomerController {
 
     /**
      * makes updates to already existing customer object.
+     * @return updated customer information.
      */
     public Customer editCustomer() {
         Customer customer = customerTable.getSelectionModel().getSelectedItem();
@@ -439,6 +445,11 @@ public class CustomerController {
         customerCountry.setValue(null);
     }
 
+    /** removes a customer from the customer table.
+     * @param event the action of clicking on the delete button
+     * @throws SQLException in case of SQL error
+     * @throws IOException due to changing scene when the action is completed.
+     */
     @FXML
     void deleteHandler(ActionEvent event) throws SQLException, IOException {
         Customer selectedCustomer = customerTable.getSelectionModel().getSelectedItem();
@@ -467,7 +478,10 @@ public class CustomerController {
         }
     }
 
-    public static void confirmDelete(Customer selectedCustomer) throws SQLException {
+    /** Generates a confirmation alert before removing the selected customer.
+     * @param selectedCustomer the selected customer from the table.
+     */
+    public static void confirmDelete(Customer selectedCustomer) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Customer");
         alert.setHeaderText("Delete Customer");
@@ -478,12 +492,11 @@ public class CustomerController {
         }
     }
 
-        public void initialize () {
-            createColumns();
-            setTableData();
-            populatesCountryAndState();
-            countryComboBox();
-        }
-
-
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        createColumns();
+        setTableData();
+        populatesCountryAndState();
+        countryComboBox();
     }
+}

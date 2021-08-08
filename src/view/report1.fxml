@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="399.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Report1Controller">
+   <children>
+      <Button fx:id="backBtn" layoutX="510.0" layoutY="338.0" mnemonicParsing="false" onMouseClicked="#backBtnHandler" text="&lt;- Back" />
+      <ComboBox fx:id="monthBox" layoutX="68.0" layoutY="153.0" onAction="#monthBoxHandler" prefWidth="150.0" promptText="Month" />
+      <ComboBox fx:id="typeBox" layoutX="68.0" layoutY="224.0" onAction="#typeBoxHandler" prefWidth="150.0" promptText="Appt. Type" />
+      <Label fx:id="totalNumber" layoutX="360.0" layoutY="153.0" text="#" visible="false">
+         <font>
+            <Font size="64.0" />
+         </font>
+      </Label>
+      <Label layoutX="263.0" layoutY="33.0" prefHeight="27.0" prefWidth="89.0" text="Report 1" textAlignment="CENTER">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Button fx:id="submitBtn" layoutX="274.0" layoutY="285.0" mnemonicParsing="false" onAction="#submitHandler" text="Submit" />
+   </children>
+</AnchorPane>

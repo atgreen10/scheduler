@@ -17,6 +17,7 @@ public class DBQuery {
         stmt = conn.prepareStatement(sqlStatement);
     }
 
+    /**Gets prepared statement object for JDBC*/
     public static PreparedStatement getPreparedStatement(){
         return stmt;
     }
@@ -25,7 +26,7 @@ public class DBQuery {
 //    public static void setStatement(Connection conn) throws SQLException {
 //        statement = conn.createStatement();
 //    }
-
+    /** Gets the statement object for JDBC */
     public static Statement getStatement() {
         return statement;
     }

@@ -1,11 +1,11 @@
 package controller;
 
-import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -14,24 +14,21 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import model.Appointment;
 import model.Contact;
-import model.Customer;
 import utils.Requests;
 
-import javax.swing.*;
 import java.io.IOException;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.*;
 
+import static java.time.ZoneId.systemDefault;
 import static java.time.ZoneOffset.UTC;
 
-public class AppointmentController {
+public class AppointmentController implements Initializable {
 
     Stage stage;
     LocalDate startDate;
@@ -41,7 +38,7 @@ public class AppointmentController {
     LocalDateTime startDateTime;
     LocalDateTime endDateTime;
     ZonedDateTime usersTime;
-    static ZonedDateTime standardStartTime;
+    static ZonedDateTime standardTime;
     static ZonedDateTime standardEndTime;
     static ZonedDateTime usersStartLocalZonedDateTime;
     ZonedDateTime usersEndLocalZonedDateTime;
@@ -51,14 +48,17 @@ public class AppointmentController {
     private final ResultSet appointmentsList = Requests.getAppointmentList();
     private final ResultSetMetaData metaData = appointmentsList.getMetaData();
 
+    /**
+     * caches the request from the database for all appointment details.
+     */
+    private ObservableList<Appointment> appts = Requests.getAppointments();
+
 
     ObservableList<String> startHours = FXCollections.observableArrayList();
     ObservableList<String> startMinutes = FXCollections.observableArrayList();
     ObservableList<String> endHours = FXCollections.observableArrayList();
     ObservableList<String> endMinutes = FXCollections.observableArrayList();
     ObservableList<Contact> contacts = Requests.contactComboBoxInfo();
-    ObservableList<Appointment> allAppointments = Requests.getAppointments();
-
 
     static DateTimeFormatter formatTime = DateTimeFormatter.ofPattern("HH:mm");
     DateTimeFormatter formatDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -66,8 +66,10 @@ public class AppointmentController {
     static ZoneId timeInEST = ZoneId.of("America/New_York");
     ZoneId timeInUTC = ZoneId.of("UTC");
     Map<Integer, String> contactIDtoNames = new HashMap<>();
-    static LocalTime businessStartHours = LocalTime.parse("08:00", formatTime);
-    static LocalTime businessEndHours = LocalTime.parse("20:00", formatTime);
+
+    /** Business time converted from EST to localtime */
+    LocalTime businessStartHours = ((LocalDateTime.of(LocalDate.now(), LocalTime.of(8,0)).atZone(timeInEST)).withZoneSameInstant(systemDefault()).toLocalTime());
+    LocalTime businessEndHours = ((LocalDateTime.of(LocalDate.now(), LocalTime.of(22,0)).atZone(timeInEST)).withZoneSameInstant(systemDefault()).toLocalTime());
 
     @FXML
     private Button backBtn;
@@ -141,6 +143,8 @@ public class AppointmentController {
     public AppointmentController() throws SQLException {
     }
 
+
+
     /**
      * Sends the user to the previous page
      */
@@ -166,16 +170,16 @@ public class AppointmentController {
         } else {
             editAppointment();
         }
-        if(!overlaps){
-                FXMLLoader loader = new FXMLLoader();
-                loader.setLocation(getClass().getResource("/view/MainMenu.fxml"));
-                loader.load();
-
-                stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-                Parent scene = loader.getRoot();
-                stage.setScene(new Scene(scene));
-                stage.show();
-            }
+//        if(!overlaps){
+//                FXMLLoader loader = new FXMLLoader();
+//                loader.setLocation(getClass().getResource("/view/MainMenu.fxml"));
+//                loader.load();
+//
+//                stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+//                Parent scene = loader.getRoot();
+//                stage.setScene(new Scene(scene));
+//                stage.show();
+//            }
         }
 //        FXMLLoader loader = new FXMLLoader();
 //        loader.setLocation(getClass().getResource("/view/MainMenu.fxml"));
@@ -190,10 +194,21 @@ public class AppointmentController {
     @FXML
     void deleteApptBtnHandler(MouseEvent event) {
         Appointment selectedAppointment = apptTableView.getSelectionModel().getSelectedItem();
-        apptTableView.getItems().remove(selectedAppointment);
-        Requests.removeAppt(selectedAppointment);
-        apptTableView.refresh();
+        if (apptTableView.getItems().contains(selectedAppointment)) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete Appointment");
+            alert.setHeaderText("Delete Appointment " + selectedAppointment.getAppointmentID() + "?");
+            alert.setContentText("Are you sure you want to delete this " + selectedAppointment.getApptType() + " appointment?");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK) {
+                apptTableView.getItems().remove(selectedAppointment);
+                Requests.removeAppt(selectedAppointment);
+                clearSelection();
+                apptTableView.setItems(Requests.getAppointments());
+            }
+        }
     }
+
 
     /**
      * Gets the info from the selected appointment on the tableview.
@@ -202,7 +217,6 @@ public class AppointmentController {
     void getSelectedAppointment(MouseEvent event) {
         Appointment selectedAppointment = apptTableView.getSelectionModel().getSelectedItem();
         isNewAppt = false;
-
 
         apptTitleText.setText(selectedAppointment.getTitle());
         apptDescriptionText.setText(selectedAppointment.getDescription());
@@ -233,17 +247,15 @@ public class AppointmentController {
         return contactIDtoNames.get(contactID);
     }
 
-    /**
-     * fills the contact combo box with contact ID's
+    /** Lambda iterates over the list of contacts and assigns them to the combobox to be shown on the GUI
+     * @param event when the combo box is clicked, the code is run.
      */
     @FXML
     void contactHandler(MouseEvent event) {
-        for (Contact contact : contacts) {
-            apptContactComboBox.setItems(contacts);
-            contactMap(contact);
-            System.out.println("This is the contact Map:" + getNameFromMap(Integer.parseInt(String.valueOf(contact.getContactID()))));
+        List contactsList = Arrays.asList(contacts);
+        contactsList.forEach(c -> apptContactComboBox.setItems((ObservableList<Contact>) c));
+
         }
-    }
 
     /**
      * fills the end time minute combobox with values spaced 15 mins apart
@@ -344,57 +356,11 @@ public class AppointmentController {
     }
 
     /**
-     * Converts the date and time to a LocalDateTime data type
-     */
-    public LocalDateTime getStartDateTime() {
-//        String startDate = getStartDate().toString();
-//        String startTime = getStartTime().toString();
-        startDateTime = LocalDateTime.of(getStartDate(), getStartTime());
-        System.out.println("The startDateTime is :" + startDateTime);
-        return startDateTime;
-    }
-
-    /**
-     * Converts the date and time to a LocalDateTime data type
-     */
-    public LocalDateTime getEndDateTime() {
-//        String endDate = getEndDate().toString();
-//        String endTime = getEndTime().toString();
-        endDateTime = LocalDateTime.of(getEndDate(), getEndTime());
-        System.out.println("The endDateTime is :" + endDateTime);
-        return endDateTime;
-    }
-
-    /**
-     * Converts the date and time to the users ZonedDateTime data type
-     */
-    public ZonedDateTime getUsersStartTime() {
-        usersStartLocalZonedDateTime = getStartDateTime().atZone(localZoneID);
-        return usersStartLocalZonedDateTime;
-    }
-
-    /**
-     * Converts the date and time to the users ZonedDateTime data type
-     */
-    public ZonedDateTime getUsersEndTime() {
-        usersEndLocalZonedDateTime = getEndDateTime().atZone(localZoneID);
-        return usersEndLocalZonedDateTime;
-    }
-
-    /**
      * Converts time to UTC
      */
-    public static ZonedDateTime getStandardStartTime(ZonedDateTime timeNeedsConversion) {
-        standardStartTime = timeNeedsConversion.withZoneSameInstant(UTC);
-        return standardStartTime;
-    }
-
-    /**
-     * Converts time to UTC
-     */
-    public static ZonedDateTime getStandardEndTime(ZonedDateTime timeNeedsConversion) {
-        standardEndTime = timeNeedsConversion.withZoneSameInstant(UTC);
-        return standardEndTime;
+    public static ZonedDateTime getStandardTime(ZonedDateTime timeNeedsConversion) {
+        standardTime = timeNeedsConversion.withZoneSameInstant(UTC);
+        return standardTime;
     }
 
     /**
@@ -449,7 +415,7 @@ public class AppointmentController {
         return new TableColumn(name);
     }
 
-    /**
+     /**
      * Sets up the data in the tableview
      */
     private void setTableData() {
@@ -493,18 +459,20 @@ public class AppointmentController {
 
     /**
      * Checks if the users appointment time is within business hours.
+     * @return true if time falls within business hours and false if outside business hours
      */
     public boolean isWithinBusinessHours() {
-        if ((businessStartHours.getHour() <= getUsersStartTime().getHour()) && (businessEndHours.getHour() >= getUsersEndTime().getHour())) {
-            return true;
+//        if (((businessStartHours.getHour()) <= (getStartTime()).getHour()) && (businessEndHours.getHour() >= (getEndTime().getHour()))) {
+        if(businessStartHours.isAfter(getStartTime()) || businessStartHours.isAfter(getEndTime()) || businessEndHours.isBefore(getStartTime()) || businessEndHours.isBefore(getEndTime())){
+            return false;
         }
-        return false;
+        return true;
     }
 
     /**
      * Creates a new appointment based on the model and runs code to insert it to database
      */
-    public void createNewAppt() throws IOException {
+    public void createNewAppt() {
         Appointment newAppointment = null;
         isNewAppt = true;
 
@@ -514,8 +482,8 @@ public class AppointmentController {
             newAppointment.setDescription(apptDescriptionText.getText());
             newAppointment.setApptType(apptTypeText.getText());
             newAppointment.setLocation(apptLocationText.getText());
-            newAppointment.setStartDateTime(LocalDateTime.from(getUsersStartTime()));
-            newAppointment.setEndDateTime(LocalDateTime.from(getUsersEndTime()));
+            newAppointment.setStartDateTime(LocalDateTime.of(getStartDate(), getStartTime()));
+            newAppointment.setEndDateTime(LocalDateTime.of(getEndDate(), getEndTime()));
             newAppointment.setCustomerID(Integer.parseInt(customerIDText.getText()));
             newAppointment.setUserID(Integer.parseInt(userIDText.getText()));
             newAppointment.setContactID(Integer.parseInt(apptContactComboBox.getSelectionModel().getSelectedItem().getContactID()));
@@ -526,25 +494,17 @@ public class AppointmentController {
                 alert.setHeaderText("Appointment Overlap");
                 alert.setContentText("Appointment overlaps an already existing appointment");
                 alert.showAndWait();
-//            } else {
-//                Requests.createNewAppt(newAppointment);
-//                FXMLLoader loader = new FXMLLoader();
-//                loader.setLocation(getClass().getResource("/view/MainMenu.fxml"));
-//                loader.load();
-//
-//                Parent scene = loader.getRoot();
-//                stage.setScene(new Scene(scene));
-//                stage.show();
+                return;
             }
+            Requests.createNewAppt(newAppointment);
+            apptTableView.setItems(Requests.getAppointments());
+            clearSelection();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Not within business hours");
             alert.setHeaderText("Appointment Error");
             alert.setContentText("Appointment is not within business hours");
             alert.showAndWait();
-        }
-        if (newAppointment != null) {
-            Requests.createNewAppt(newAppointment);
         }
     }
 
@@ -565,8 +525,8 @@ public class AppointmentController {
             appointment.setDescription(apptDescriptionText.getText());
             appointment.setLocation(apptLocationText.getText());
             appointment.setApptType(apptTypeText.getText());
-            appointment.setStartDateTime(LocalDateTime.from(getUsersStartTime()));
-            appointment.setEndDateTime(LocalDateTime.from(getUsersEndTime()));
+            appointment.setStartDateTime(LocalDateTime.of(getStartDate(), getStartTime()));
+            appointment.setEndDateTime(LocalDateTime.of(getEndDate(), getEndTime()));
             appointment.setCustomerID(Integer.parseInt(customerIDText.getText()));
             appointment.setUserID(Integer.parseInt(userIDText.getText()));
             appointment.setContactID(Integer.parseInt(apptContactComboBox.getSelectionModel().getSelectedItem().getContactID()));
@@ -591,11 +551,14 @@ public class AppointmentController {
             alert.setContentText("Appointment is not within business hours.");
             alert.showAndWait();
         }
+        clearSelection();
+        apptTableView.setItems(Requests.getAppointments());
     }
 
 
     /**
-     * gets all appointments in the current month
+     * when radio button is selected, only future appointments for the current month are retrieved
+     * @param event the action of clicking on the radio button
      */
     @FXML
     void monthViewHandler(ActionEvent event) {
@@ -604,7 +567,8 @@ public class AppointmentController {
     }
 
     /**
-     * Gets appointments that are 7 days from the current day
+     * Gets future appointments that are within 7 days.
+     * @param event the action of selecting the radio button.
      */
     @FXML
     void weekViewHandler(ActionEvent event) {
@@ -614,17 +578,14 @@ public class AppointmentController {
 
     /**
      * gets all appointments and shows them when the All radio button is selected.
+     * @param event the action of selecting this radio button.
      */
     @FXML
     void viewAllHandler(ActionEvent event) {
         apptTableView.setItems(Requests.getAppointments());
     }
 
-    /**
-     * Clears the appointment info text boxes and deselects an appointment.
-     */
-    @FXML
-    void clearBtnHandler(ActionEvent event) {
+    void clearSelection(){
         apptTableView.getSelectionModel().clearSelection();
         isNewAppt = true;
         apptTitleText.clear();
@@ -636,33 +597,54 @@ public class AppointmentController {
         endDatePicker.setValue(null);
         startHourComboBox.setValue(null);
         startMinuteComboBox.setValue(null);
+        endHourComboBox.setValue(null);
+        endMinuteComboBox.setValue(null);
         customerIDText.clear();
         userIDText.clear();
     }
 
-    /** checks the appointment time against database for any overlap. This determines whether the appointment can be booked or now. */
+    /**
+     * Clears the appointment info text boxes and deselects an appointment.
+     * @param event function is run when the clear button is selected.
+     */
+    @FXML
+    void clearBtnHandler(ActionEvent event) {
+        clearSelection();
+    }
+
+    /** checks the appointment time against database for any overlap. This determines whether the appointment can be booked or now.
+     * @param appointment uses the selected appointment to compare against database.
+     * */
     public boolean checkForOverlap(Appointment appointment) {
         ObservableList<Appointment> apptList = Requests.getAppointments();
         overlaps = false;
-        for (int i = 1; i <= apptList.size() - 1; i++) {
-          if (!(appointment.getEndDateTime().isBefore(apptList.get(i).getStartDateTime())) && (!appointment.getStartDateTime().isAfter(apptList.get(i).getEndDateTime()))){
-               overlaps = true;
-               return true;
-           }
-           else{
-               overlaps = false;
-           }
-        }
+        for (int i = 0; i <= apptList.size() - 1; i++) {
+                if ((appointment.getStartDateTime().toLocalDate().isEqual(apptList.get(i).getStartDateTime().toLocalDate()))
+                        &&
+                (appointment.getAppointmentID() != apptList.get(i).getAppointmentID())) {
+
+                  LocalTime pStart = appointment.getStartDateTime().toLocalTime();
+                  LocalTime pEnd = appointment.getEndDateTime().toLocalTime();
+                  LocalTime aStart = apptList.get(i).getStartDateTime().toLocalTime();
+                  LocalTime aEnd = apptList.get(i).getEndDateTime().toLocalTime();
+
+                  //pStart >= aStart && pStart < aEnd
+                    if((pStart.isAfter(aStart) || pStart.equals(aStart)) && (pStart.isBefore(aEnd))) {
+                        overlaps = true;
+                    }
+                  //pEnd > aStart && pEnd <= aEnd
+                    if(pEnd.isAfter(aStart) && (pEnd.isBefore(aEnd) || pEnd.equals(aEnd))){
+                        overlaps = true;
+                    }
+                  //pStart <= aStart && pEnd >= aEnd
+                    if((pStart.isBefore(aStart) || pStart.equals(aStart)) && (pEnd.isAfter(aEnd) || pEnd.equals(aEnd))){
+                        overlaps = true;
+                    }
+                }
+            }
         return overlaps;
     }
-//            if (allAppointments.get(i).getStartDateTime().toLocalDate().equals(appointment.getStartDateTime().toLocalDate())) {
-//                if (!appointment.getEndDateTime().toLocalTime().isBefore(allAppointments.get(i).getStartDateTime().toLocalTime()) && !appointment.getStartDateTime().toLocalTime().isAfter(allAppointments.get(i).getEndDateTime().toLocalTime())) {
-//                    overlaps = true;
-//                }
-//            }
-//        }
-//        return overlaps;
-//    }
+
 
     /** Clears the time fields on the Appointment page when an overlap is detected. */
     public void clearTime(){ ;
@@ -674,13 +656,13 @@ public class AppointmentController {
 
 
 
-    public void initialize() {
-        createColumns();
-        setUpEndHourCombo();
-        setUpEndMinuteCombo();
-        setUpStartHourCombo();
-        setUpStartMinuteCombo();
-        setTableData();
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+            createColumns();
+            setUpEndHourCombo();
+            setUpEndMinuteCombo();
+            setUpStartHourCombo();
+            setUpStartMinuteCombo();
+            setTableData();
+        }
     }
-
-}

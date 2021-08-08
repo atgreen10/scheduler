@@ -9,7 +9,10 @@ public class DBConnection {
     private Statement stmt = null;
 
     /** database credentials: */
-    
+    static final String userName = "U05SoC";
+    static final String password = "53688592846";
+    static final String jdbcURL = "jdbc:mysql://wgudb.ucertify.com/WJ05SoC";
+
 
     public static void main(String[] args) {
 
